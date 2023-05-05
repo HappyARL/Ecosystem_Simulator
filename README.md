@@ -1,4 +1,5 @@
 # Ecosystem Simulator
-> Симулятор экосистемы
+
+![logical-model](/preview.png)
 
 made by using SFML and C++.
