@@ -5,17 +5,29 @@
 #include "MainMenuState.h"
 
 void MainMenuState::Init_Variables() {
-  sf::View view(sf::Vector2f(1280, 720), sf::Vector2f(2560, 1440));
-  this->main_camera = view;
+  if (this->window->getSize().y == 1440) {
+    sf::View view(sf::Vector2f(1280, 720), sf::Vector2f(2560, 1440));
+    this->main_camera = view;
+  } else {
+    sf::View view(sf::Vector2f(1280, 720), sf::Vector2f(2560, 1660));
+    this->main_camera = view;
+  }
 }
 
 void MainMenuState::Init_Background() {
   this->background.setSize(sf::Vector2f(static_cast<float>(this->window->getSize().x),
                                         static_cast<float>(this->window->getSize().y)));
-  if (!this->bg_texture.loadFromFile("Rescources/Images/Background/background1.png")) {
-    throw "ERROR::MAINMENUSTATE::ERROR while load background!";
+  if (this->window->getSize().y == 1440) {
+    if (!this->bg_texture.loadFromFile("Rescources/Images/Background/background2.png")) {
+      throw "ERROR::MAINMENUSTATE::ERROR while load background!";
+    }
+    this->background.setTexture(&this->bg_texture);
+  } else {
+    if (!this->bg_texture.loadFromFile("Rescources/Images/Background/background_full.png")) {
+      throw "ERROR::MAINMENUSTATE::ERROR while load background!";
+    }
+    this->background.setTexture(&this->bg_texture);
   }
-  this->background.setTexture(&this->bg_texture);
 }
 
 void MainMenuState::Init_Fonts() {
@@ -107,6 +119,7 @@ void MainMenuState::Render(sf::RenderTarget* target) {
   if (!target) {
     target = this->window;
   }
+  target->clear(sf::Color::White);
   target->draw(this->background);
   this->RenderButton(target);
   target->setView(this->main_camera);

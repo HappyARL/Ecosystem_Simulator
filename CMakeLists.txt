@@ -11,7 +11,7 @@ set(
         State.cpp State.h
         GameState.cpp GameState.h
         Entity.cpp Entity.h
-        MainMenuState.cpp MainMenuState.h Button.cpp Button.h Player.cpp Player.h MapGenerator.cpp MapGenerator.h PerlinNoise.cpp PerlinNoise.h)
+        MainMenuState.cpp MainMenuState.h Button.cpp Button.h Player.cpp Player.h MapGenerator.cpp MapGenerator.h PerlinNoise.cpp PerlinNoise.h Pig.cpp Pig.h PauseMenuState.cpp PauseMenuState.h)
 
 add_executable(Game ${SOURCE_FILES})
 

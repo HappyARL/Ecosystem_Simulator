@@ -4,8 +4,28 @@
 
 #include "MapGenerator.h"
 
+int MapGenerator::GetRandomNumber(int min, int max) {
+  //srand(time(NULL));
+  int num = min + rand() % (max - min + 1);
+  return num;
+}
+
+std::pair<int, int> MapGenerator::GetRandomCoords(int min, int max) {
+  int x = GetRandomNumber(min, max);
+  int y = GetRandomNumber(min, max);
+  while (this->perlinMap[x][y] == 1 && this->perlinMap[x][y] == 2) {
+    x = GetRandomNumber(++min, --max);
+    y = GetRandomNumber(++min, --max);
+  }
+  std::cout << x << " " << y << '\n';
+  std::pair<int, int> ans = std::make_pair(x, y);
+  return ans;
+}
+
 void MapGenerator::Init_Variables(std::vector<std::vector<int>> perlinMap) {
   this->perlinMap = perlinMap;
+  this->KeyTime = 0.f;
+  this->KeyTimeMax = 10.f;
 }
 
 std::vector<std::vector<int> > MapGenerator::TileGenerator(size_t length, size_t width) {
@@ -40,6 +60,9 @@ std::vector<std::vector<int> > MapGenerator::TileGenerator(size_t length, size_t
       if (n > (-0.10) && n < (0.25)) {
         perlinMap[i][y] = 0;
       }
+      if (i == 0 || i == 50 || y == 0 || y == 50) {
+        perlinMap[i][y] = 1;
+      }
       std::cout << n << std::endl;
     }
   }
@@ -51,6 +74,18 @@ MapGenerator::MapGenerator(std::vector<std::vector<int> > perlinMap) {
 }
 
 MapGenerator::~MapGenerator() {}
+
+void MapGenerator::Update(const float& dt) {
+  if (this->KeyTime < this->KeyTimeMax) {
+    this->KeyTime += 5.f * dt;
+  } else {
+    for (int i = 0; i < 3; ++i) {
+      std::pair<int, int> cur_carrot_position = GetRandomCoords(1, 50);
+      this->perlinMap[cur_carrot_position.first][cur_carrot_position.second] = 2;
+    }
+    this->KeyTime = 0.f;
+  }
+}
 
 void MapGenerator::Render(sf::RenderTarget *target, std::map<int, sf::Sprite> sprites) {
   for (int x = 0; x < column_width; ++x) {

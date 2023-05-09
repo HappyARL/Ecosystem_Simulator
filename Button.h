@@ -29,6 +29,9 @@ class Button {
   sf::Font* font;
   sf::Text text;
 
+  float x;
+  float y;
+
   sf::Color idle_color;
   sf::Color hover_color;
   sf::Color active_color;
@@ -43,7 +46,7 @@ class Button {
   const bool is_pressed();
 
   // Functions
-  void Update(const sf::Vector2f mouse_pos);
+  void Update(const sf::Vector2f& mouse_pos);
   void Render(sf::RenderTarget* target);
 };
 

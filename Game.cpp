@@ -96,6 +96,7 @@ void Game::UpdateDeltaTime() {
   // Update delta_time with time it takes to update and render frame
   this->delta_time = this->delta_time_clock.restart().asSeconds();
 
+  // Print tech info
   system("cls");
   std::cout << this->delta_time << '\n';
 }
@@ -133,7 +134,6 @@ void Game::Render() {
     this->states.top()->Render(this->window);
   }
   // Render items
-
   this->window->display();
 }
 

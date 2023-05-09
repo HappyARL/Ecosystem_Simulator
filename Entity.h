@@ -19,6 +19,8 @@
 #include <vector>
 #include <stack>
 #include <map>
+#include <time.h>
+#include <stdlib.h>
 
 class Entity {
  private:
@@ -27,20 +29,27 @@ class Entity {
  protected:
   sf::Texture* texture;
   sf::Sprite* sprite;
+  sf::Texture* texture_dead;
+  sf::Sprite* sprite_dead;
+  //sf::FloatRect boundingBox = sprite->getGlobalBounds();
   float movement_speed;
-  sf::View camera_view;
 
  public:
+  sf::View camera_view;
   Entity();
   virtual ~Entity();
 
   // Component function
   void CreateSprite(sf::Texture* texture);
+
   // Functions
   virtual void SetPosition(const float x, const float y);
+  void SetCameraPosition(const float x, const float y);
   virtual void Move(const float& dt, const float dir_x, const float dir_y);
-  virtual void Update(const float& dt);
-  virtual void Render(sf::RenderTarget* target);
+  virtual void MoveCamera(const float& dt, const float dir_x, const float dir_y);
+  void Zoom(const float power_zoom);
+  virtual void Update(const float& dt) = 0;
+  virtual void Render(sf::RenderTarget* target = nullptr) = 0;
 };
 
 #endif //GAME_ENTITY_H

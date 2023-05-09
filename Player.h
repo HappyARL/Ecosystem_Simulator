@@ -17,8 +17,10 @@ class Player : public Entity {
 
  public:
   Player(float x, float y, sf::Texture* texture);
+  std::pair<float, float> GetCoords();
   virtual ~Player();
-
+  void Update(const float& dt);
+  void Render(sf::RenderTarget* target);
   //Functions
 
 };

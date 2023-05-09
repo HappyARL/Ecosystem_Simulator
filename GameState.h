@@ -6,19 +6,33 @@
 #define GAME_GAMESTATE_H
 
 #include "State.h"
+#include "PauseMenuState.h"
 #include "MapGenerator.h"
+#include "Pig.h"
 
 class GameState : public State {
  private:
+  sf::Font font;
+  PauseMenuState* pause_menu;
   Player* player;
   MapGenerator* map_gen;
   std::vector<std::vector<int> > map;
+  sf::RectangleShape background;
+
+  std::vector<Pig*> pig_vector;
+  //Pig* piggy;
 
   // Functions
+  int GetRandomNumber(int min, int max);
+  std::pair<float, float> GetRandomCoords(int min, int max);
+
   void Init_KeyBinds();
+  void Init_Fonts();
   void Init_Texture();
+  void Init_PauseMenu();
   void Init_Sprite();
   void Init_Players();
+  void Init_Animals();
   void Init_Map();
 
  public:
@@ -27,6 +41,7 @@ class GameState : public State {
 
   // Functions
   void UpdateInput(const float& dt);
+  void UpdatePlayerInput(const float& dt);
   void Update(const float& dt);
   void Render(sf::RenderTarget* target = nullptr);
 };

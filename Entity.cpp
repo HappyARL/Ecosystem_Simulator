@@ -28,6 +28,11 @@ void Entity::CreateSprite(sf::Texture* texture) {
 void Entity::SetPosition(const float x, const float y) {
   if (this->sprite) {
     this->sprite->setPosition(x, y);
+  }
+}
+
+void Entity::SetCameraPosition(const float x, const float y) {
+  if (this->sprite) {
     sf::View view(sf::Vector2f(x, y), sf::Vector2f(3*2560, 3*1440));
     this->camera_view = view;
   }
@@ -37,18 +42,16 @@ void Entity::Move(const float& dt, const float dir_x, const float dir_y) {
   if (this->sprite) {
     this->sprite->move(dir_x * this->movement_speed * dt,
                       dir_y * this->movement_speed * dt);
-    this->camera_view.move(dir_x * this->movement_speed * dt,
-                       dir_y * this->movement_speed * dt);
   }
 }
 
-void Entity::Update(const float& dt) {
-
-}
-
-void Entity::Render(sf::RenderTarget* target) {
+void Entity::MoveCamera(const float &dt, const float dir_x, const float dir_y) {
   if (this->sprite) {
-    target->draw(*this->sprite);
-    target->setView(this->camera_view);
+    this->camera_view.move(dir_x * this->movement_speed * dt,
+                           dir_y * this->movement_speed * dt);
   }
+}
+
+void Entity::Zoom(const float power_zoom) {
+  this->camera_view.zoom(power_zoom);
 }

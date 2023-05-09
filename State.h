@@ -14,6 +14,9 @@ class State {
   std::map<std::string, int>* supported_keys;
   std::map<std::string, int> key_binds;
   bool quit;
+  bool pause;
+  float KeyTime;
+  float KeyTimeMax;
 
   sf::Vector2i mouse_pos_screen;
   sf::Vector2i mouse_pos_window;
@@ -31,8 +34,14 @@ class State {
   virtual~State();
 
   const bool& GetQuit() const;
+  const bool GetKeyTime();
+
   void EndState();
+  void PauseState();
+  void unPauseState();
+
   virtual void UpdateMousePosition();
+  virtual void UpdateKeyTime(const float& dt);
   virtual void UpdateInput(const float& dt) = 0;
   virtual void Update(const float& dt) = 0;
   virtual void Render(sf::RenderTarget* target = nullptr) = 0;
