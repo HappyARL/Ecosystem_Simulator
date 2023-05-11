@@ -97,8 +97,8 @@ void Game::UpdateDeltaTime() {
   this->delta_time = this->delta_time_clock.restart().asSeconds();
 
   // Print tech info
-  system("cls");
-  std::cout << this->delta_time << '\n';
+  //system("cls");
+  //std::cout << this->delta_time << '\n';
 }
 
 void Game::Update_SFML_Events() {

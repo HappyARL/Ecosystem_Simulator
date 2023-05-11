@@ -16,9 +16,13 @@ class GameState : public State {
   PauseMenuState* pause_menu;
   Player* player;
   MapGenerator* map_gen;
-  std::vector<std::vector<int> > map;
+  std::vector<std::vector<int> > graph;
+  std::vector<std::pair<int, int> > carrot_vector;
+
   sf::RectangleShape background;
 
+  size_t pig_amount = 1;
+  size_t pig_amount_alive = pig_amount;
   std::vector<Pig*> pig_vector;
   //Pig* piggy;
 
@@ -36,6 +40,7 @@ class GameState : public State {
   void Init_Map();
 
  public:
+  std::vector<std::vector<int> > map;
   GameState(sf::RenderWindow* window, std::map<std::string, int>* supported_keys, std::stack<State*>* states);
   virtual ~GameState();
 

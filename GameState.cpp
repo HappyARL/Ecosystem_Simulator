@@ -79,19 +79,19 @@ void GameState::Init_Players() {
 }
 
 void GameState::Init_Animals() {
-  this->pig_vector.resize(5);
-  for (size_t i = 0; i < 5; ++i) {
+  for (size_t i = 0; i < this->pig_amount; ++i) {
     std::pair<float, float> map_pos = GetRandomCoords(1, 49);
     int sex_num = GetRandomNumber(0, 1);
     bool sex = sex_num == 1; // true = male and false = female
     this->pig_vector.push_back(new Pig(map_pos.first, map_pos.second, &this->textures["PIG_ALIVE"],
-                                       &this->textures["PIG_DEAD"], true, sex, this->map));
+                                       &this->textures["PIG_DEAD"], true, sex, this->map, this->graph));
   }
 }
 
 void GameState::Init_Map() {
-  this->map_gen = new MapGenerator(map);
+  this->map_gen = new MapGenerator(map, carrot_vector);
   this->map = map_gen->TileGenerator(51, 51);
+  this->graph = map_gen->MapToAdjList(map);
 }
 
 GameState::GameState(sf::RenderWindow* window, std::map<std::string, int>* supported_keys, std::stack<State*>* states)
@@ -109,7 +109,7 @@ GameState::GameState(sf::RenderWindow* window, std::map<std::string, int>* suppo
 GameState::~GameState() {
   delete this->player;
   delete this->pause_menu;
-  for (size_t i = 0; i < 5; ++i) {
+  for (size_t i = 0; i < this->pig_amount; ++i) {
     delete this->pig_vector[i];
   }
 }
@@ -162,9 +162,17 @@ void GameState::Update(const float& dt) {
 
   if (!pause) {
     this->map_gen->Update(dt);
-    for (size_t i = 5; i < 10; ++i) {
+    this->carrot_vector = map_gen->GetCarrot();
+    size_t curr_amount = 0;
+    for (size_t i = 0; i < this->pig_amount; ++i) {
+      this->pig_vector[i]->UpdateCarrotPositions(this->carrot_vector);
       this->pig_vector[i]->Update(dt);
+      if (this->pig_vector[i]->isAlive()) {
+        ++curr_amount;
+      }
+      this->map = this->pig_vector[i]->UpdateGlobalMap();
     }
+    this->pig_amount = curr_amount;
   } else {
     this->pause_menu->Update(this->mouse_pos_view);
   }
@@ -186,12 +194,17 @@ void GameState::Render(sf::RenderTarget* target) {
   info_text.setFont(this->font);
   info_text.setCharacterSize(100);
   std::stringstream ss;
-  ss << "Pig count: " << this->pig_vector.size() << '\n';
+  if (this->pig_amount <= 0) {
+    ss << "They are in a better place ..." << '\n';
+  } else {
+    ss << "Pig count: " << this->pig_amount << '\n';
+  }
+  ss << "Carrot count: " << this->carrot_vector.size() << '\n';
   info_text.setString(ss.str());
   target->draw(info_text);
 
 
-  for (size_t i = 5; i < 10; ++i) {
+  for (size_t i = 0; i < this->pig_amount; ++i) {
     this->pig_vector[i]->Render(this->window);
   }
 

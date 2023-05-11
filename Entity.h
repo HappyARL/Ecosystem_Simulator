@@ -14,10 +14,12 @@
 #include <iostream>
 #include <ctime>
 #include <cstdlib>
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <stack>
+#include <set>
 #include <map>
 #include <time.h>
 #include <stdlib.h>

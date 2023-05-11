@@ -6,14 +6,14 @@
 
 int MapGenerator::GetRandomNumber(int min, int max) {
   //srand(time(NULL));
-  int num = min + rand() % (max - min + 1);
+   int num = min + rand() % (max - min + 1);
   return num;
 }
 
 std::pair<int, int> MapGenerator::GetRandomCoords(int min, int max) {
   int x = GetRandomNumber(min, max);
   int y = GetRandomNumber(min, max);
-  while (this->perlinMap[x][y] == 1 && this->perlinMap[x][y] == 2) {
+  while (this->perlinMap[x][y] == 1) {
     x = GetRandomNumber(++min, --max);
     y = GetRandomNumber(++min, --max);
   }
@@ -22,8 +22,49 @@ std::pair<int, int> MapGenerator::GetRandomCoords(int min, int max) {
   return ans;
 }
 
-void MapGenerator::Init_Variables(std::vector<std::vector<int>> perlinMap) {
-  this->perlinMap = perlinMap;
+std::vector<std::pair<int, int> > MapGenerator::GetCarrot() {
+  return this->carrotPosition;
+}
+
+std::vector<std::vector<int> > MapGenerator::MapToAdjList(std::vector<std::vector<int>> map) {
+  size_t rows = this->column_width;
+  size_t cols = this->column_height;
+  std::vector<std::vector<int>> graph(rows * cols);
+
+  for (size_t i = 0; i < rows; i++) {
+    for (size_t j = 0; j < cols; j++) {
+      if (map[i][j] == 1) {
+        int vertex = (int)(i * cols + j);
+        // Check neighboring cells
+        if (i > 0 && map[i - 1][j] == 1) {
+          int neighbor = (int)((i - 1) * cols + j);
+          graph[vertex].push_back(neighbor);
+          graph[neighbor].push_back(vertex);
+        }
+        if (j > 0 && map[i][j - 1] == 1) {
+          int neighbor = (int)(i * cols + (j - 1));
+          graph[vertex].push_back(neighbor);
+          graph[neighbor].push_back(vertex);
+        }
+        if (i < rows - 1 && map[i + 1][j] == 1) {
+          int neighbor = (int)((i + 1) * cols + j);
+          graph[vertex].push_back(neighbor);
+          graph[neighbor].push_back(vertex);
+        }
+        if (j < cols - 1 && map[i][j + 1] == 1) {
+          int neighbor = (int)(i * cols + (j + 1));
+          graph[vertex].push_back(neighbor);
+          graph[neighbor].push_back(vertex);
+        }
+      }
+    }
+  }
+  return graph;
+}
+
+void MapGenerator::Init_Variables(std::vector<std::vector<int>> perlin_map, std::vector<std::pair<int, int> > carrotMap) {
+  this->perlinMap = perlin_map;
+  this->carrotPosition = carrotMap;
   this->KeyTime = 0.f;
   this->KeyTimeMax = 10.f;
 }
@@ -69,8 +110,8 @@ std::vector<std::vector<int> > MapGenerator::TileGenerator(size_t length, size_t
   return this->perlinMap;
 }
 
-MapGenerator::MapGenerator(std::vector<std::vector<int> > perlinMap) {
-  this->Init_Variables(perlinMap);
+MapGenerator::MapGenerator(std::vector<std::vector<int> > perlinMap, std::vector<std::pair<int, int> > carrotMap) {
+  this->Init_Variables(perlinMap, carrotMap);
 }
 
 MapGenerator::~MapGenerator() {}
@@ -79,9 +120,10 @@ void MapGenerator::Update(const float& dt) {
   if (this->KeyTime < this->KeyTimeMax) {
     this->KeyTime += 5.f * dt;
   } else {
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 2; ++i) {
       std::pair<int, int> cur_carrot_position = GetRandomCoords(1, 50);
       this->perlinMap[cur_carrot_position.first][cur_carrot_position.second] = 2;
+      this->carrotPosition.push_back(cur_carrot_position);
     }
     this->KeyTime = 0.f;
   }
