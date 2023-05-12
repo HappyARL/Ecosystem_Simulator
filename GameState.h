@@ -9,6 +9,7 @@
 #include "PauseMenuState.h"
 #include "MapGenerator.h"
 #include "Pig.h"
+#include "Wolf.h"
 
 class GameState : public State {
  private:
@@ -16,14 +17,17 @@ class GameState : public State {
   PauseMenuState* pause_menu;
   Player* player;
   MapGenerator* map_gen;
-  std::vector<std::vector<int> > graph;
   std::vector<std::pair<int, int> > carrot_vector;
+
+  float default_speed = 5.f;
 
   sf::RectangleShape background;
 
-  size_t pig_amount = 1;
-  size_t pig_amount_alive = pig_amount;
+  size_t pig_amount = 6;
+  size_t wolf_amount = 2;
+  int baby_born = 0;
   std::vector<Pig*> pig_vector;
+  std::vector<Wolf*> wolf_vector;
   //Pig* piggy;
 
   // Functions
@@ -47,6 +51,7 @@ class GameState : public State {
   // Functions
   void UpdateInput(const float& dt);
   void UpdatePlayerInput(const float& dt);
+  void UpdatePigBorn();
   void Update(const float& dt);
   void Render(sf::RenderTarget* target = nullptr);
 };

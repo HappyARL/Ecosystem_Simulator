@@ -14,8 +14,8 @@ std::pair<int, int> MapGenerator::GetRandomCoords(int min, int max) {
   int x = GetRandomNumber(min, max);
   int y = GetRandomNumber(min, max);
   while (this->perlinMap[x][y] == 1) {
-    x = GetRandomNumber(++min, --max);
-    y = GetRandomNumber(++min, --max);
+    x = GetRandomNumber(min, max);
+    y = GetRandomNumber(min, max);
   }
   std::cout << x << " " << y << '\n';
   std::pair<int, int> ans = std::make_pair(x, y);
@@ -24,42 +24,6 @@ std::pair<int, int> MapGenerator::GetRandomCoords(int min, int max) {
 
 std::vector<std::pair<int, int> > MapGenerator::GetCarrot() {
   return this->carrotPosition;
-}
-
-std::vector<std::vector<int> > MapGenerator::MapToAdjList(std::vector<std::vector<int>> map) {
-  size_t rows = this->column_width;
-  size_t cols = this->column_height;
-  std::vector<std::vector<int>> graph(rows * cols);
-
-  for (size_t i = 0; i < rows; i++) {
-    for (size_t j = 0; j < cols; j++) {
-      if (map[i][j] == 1) {
-        int vertex = (int)(i * cols + j);
-        // Check neighboring cells
-        if (i > 0 && map[i - 1][j] == 1) {
-          int neighbor = (int)((i - 1) * cols + j);
-          graph[vertex].push_back(neighbor);
-          graph[neighbor].push_back(vertex);
-        }
-        if (j > 0 && map[i][j - 1] == 1) {
-          int neighbor = (int)(i * cols + (j - 1));
-          graph[vertex].push_back(neighbor);
-          graph[neighbor].push_back(vertex);
-        }
-        if (i < rows - 1 && map[i + 1][j] == 1) {
-          int neighbor = (int)((i + 1) * cols + j);
-          graph[vertex].push_back(neighbor);
-          graph[neighbor].push_back(vertex);
-        }
-        if (j < cols - 1 && map[i][j + 1] == 1) {
-          int neighbor = (int)(i * cols + (j + 1));
-          graph[vertex].push_back(neighbor);
-          graph[neighbor].push_back(vertex);
-        }
-      }
-    }
-  }
-  return graph;
 }
 
 void MapGenerator::Init_Variables(std::vector<std::vector<int>> perlin_map, std::vector<std::pair<int, int> > carrotMap) {

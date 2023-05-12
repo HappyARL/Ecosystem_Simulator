@@ -52,6 +52,12 @@ void GameState::Init_Texture() {
   if (!this->textures["PIG_DEAD"].loadFromFile("Rescources/Images/Animals/pig_dead.png")) {
     throw "ERROR::GAMESTATE::Error while load PigDead texture!";
   }
+  if (!this->textures["WOLF_ALIVE"].loadFromFile("Rescources/Images/Animals/wolf.png")) {
+    throw "ERROR::GAMESTATE::Error while load PigAlive texture!";
+  }
+  if (!this->textures["WOLF_DEAD"].loadFromFile("Rescources/Images/Animals/wolf_dead.png")) {
+    throw "ERROR::GAMESTATE::Error while load PigAlive texture!";
+  }
   if (!this->textures["GRASS"].loadFromFile("Rescources/Images/Texture/grass_2.png")) {
     throw "ERROR::GAMESTATE::Error while load grass texture!";
   }
@@ -84,14 +90,20 @@ void GameState::Init_Animals() {
     int sex_num = GetRandomNumber(0, 1);
     bool sex = sex_num == 1; // true = male and false = female
     this->pig_vector.push_back(new Pig(map_pos.first, map_pos.second, &this->textures["PIG_ALIVE"],
-                                       &this->textures["PIG_DEAD"], true, sex, this->map, this->graph));
+                                       &this->textures["PIG_DEAD"], true, sex, this->map));
+  }
+  for (size_t i = 0; i < this->wolf_amount; ++i) {
+    std::pair<float, float> map_pos = GetRandomCoords(1, 49);
+    int sex_num = GetRandomNumber(0, 1);
+    bool sex = sex_num == 1; // true = male and false = female
+    this->wolf_vector.push_back(new Wolf(map_pos.first, map_pos.second, &this->textures["WOLF_ALIVE"],
+                                       &this->textures["WOLF_DEAD"], true, sex, this->map));
   }
 }
 
 void GameState::Init_Map() {
   this->map_gen = new MapGenerator(map, carrot_vector);
   this->map = map_gen->TileGenerator(51, 51);
-  this->graph = map_gen->MapToAdjList(map);
 }
 
 GameState::GameState(sf::RenderWindow* window, std::map<std::string, int>* supported_keys, std::stack<State*>* states)
@@ -150,31 +162,102 @@ void GameState::UpdatePlayerInput(const float& dt) {
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(this->key_binds.at("ZOOM_OUT")))) {
     this->player->Zoom(1.03f);
   }
+  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(this->key_binds.at("SPEED_UP"))) && this->GetKeyTime()) {
+    if (this->default_speed >= -10.f) {
+      this->default_speed -= 2.f;
+    }
+  }
+  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(this->key_binds.at("SLOW_DOWN"))) && this->GetKeyTime()) {
+    if (this->default_speed <= 18.f) {
+      this->default_speed += 2.f;
+    }
+  }
+}
+
+void GameState::UpdatePigBorn() {
+
 }
 
 void GameState::Update(const float& dt) {
-  this->UpdateMousePosition();
-  this->UpdateKeyTime(dt);
-  this->UpdateInput(dt);
+  if (this->KeyTime < this->KeyTimeMax) {
+    this->KeyTime += this->default_speed * dt;
+    this->UpdateMousePosition();
+    this->UpdateKeyTime(dt);
+    this->UpdateInput(dt);
 
-  this->UpdatePlayerInput(dt);
-  this->player->Update(dt);
+    this->UpdatePlayerInput(dt);
+    this->player->Update(dt);
 
-  if (!pause) {
     this->map_gen->Update(dt);
     this->carrot_vector = map_gen->GetCarrot();
-    size_t curr_amount = 0;
-    for (size_t i = 0; i < this->pig_amount; ++i) {
-      this->pig_vector[i]->UpdateCarrotPositions(this->carrot_vector);
-      this->pig_vector[i]->Update(dt);
-      if (this->pig_vector[i]->isAlive()) {
-        ++curr_amount;
-      }
-      this->map = this->pig_vector[i]->UpdateGlobalMap();
-    }
-    this->pig_amount = curr_amount;
   } else {
-    this->pause_menu->Update(this->mouse_pos_view);
+    this->UpdateMousePosition();
+    this->UpdateKeyTime(dt);
+    this->UpdateInput(dt);
+
+    this->UpdatePlayerInput(dt);
+    this->player->Update(dt);
+
+    if (!pause) {
+      this->map_gen->Update(dt);
+      this->carrot_vector = map_gen->GetCarrot();
+      size_t curr_amount = 0;
+
+      // Update pigs
+      for (size_t i = 0; i < this->pig_amount; ++i) {
+        this->pig_vector[i]->UpdateCarrotPositions(this->carrot_vector);
+        this->pig_vector[i]->UpdatePigPositions(this->pig_vector);
+        this->pig_vector[i]->Update(dt);
+        if (this->pig_vector[i]->isAlive()) {
+          ++curr_amount;
+        }
+        this->map = this->pig_vector[i]->UpdateGlobalMap();
+        this->baby_born += this->pig_vector[i]->GetBabyCount();
+        // Birth of pig
+        if (this->baby_born != 0) {
+          while (this->baby_born != 0) {
+            int sex_num = GetRandomNumber(0, 1);
+            bool sex = sex_num == 1; // true = male and false = female
+            this->pig_vector.push_back(new Pig(this->pig_vector[i]->GetPosition().first,
+                                               this->pig_vector[i]->GetPosition().second,
+                                               &this->textures["PIG_ALIVE"],
+                                               &this->textures["PIG_DEAD"],
+                                               true, sex, this->map));
+            ++curr_amount;
+            --this->baby_born;
+          }
+        }
+      }
+
+      // Update wolves
+      for (size_t i = 0; i < this->wolf_amount; ++i) {
+        this->wolf_vector[i]->UpdateWolfPositions(this->wolf_vector);
+        this->wolf_vector[i]->UpdatePigPositions(this->pig_vector);
+        this->wolf_vector[i]->Update(dt);
+        if (this->wolf_vector[i]->isAlive()) {
+          ++curr_amount;
+        }
+        this->baby_born += this->wolf_vector[i]->GetBabyCount();
+        // Birth of wolf
+        if (this->baby_born != 0) {
+          while (this->baby_born != 0) {
+            int sex_num = GetRandomNumber(0, 1);
+            bool sex = sex_num == 1; // true = male and false = female
+            this->wolf_vector.push_back(new Wolf(this->wolf_vector[i]->GetPosition().first,
+                                               this->wolf_vector[i]->GetPosition().second,
+                                               &this->textures["WOLF_ALIVE"],
+                                               &this->textures["WOLF_DEAD"],
+                                               true, sex, this->map));
+            ++curr_amount;
+            --this->baby_born;
+          }
+        }
+      }
+      //this->wolf_amount = curr_amount;
+    } else {
+      this->pause_menu->Update(this->mouse_pos_view);
+    }
+    this->KeyTime = 0.f;
   }
 }
 
@@ -187,6 +270,25 @@ void GameState::Render(sf::RenderTarget* target) {
   this->map_gen->Render(this->window, sprites);
   this->player->Render(this->window);
 
+  int alive_pigs = 0;
+  int alive_wolfs = 0;
+
+  // Render pigs
+  for (size_t i = 0; i < this->pig_amount; ++i) {
+    this->pig_vector[i]->Render(this->window);
+    if (this->pig_vector[i]->isAlive()) {
+      ++alive_pigs;
+    }
+  }
+
+  // Render wolfs
+  for (size_t i = 0; i < this->wolf_amount; ++i) {
+    this->wolf_vector[i]->Render(this->window);
+    if (this->wolf_vector[i]->isAlive()) {
+      ++alive_wolfs;
+    }
+  }
+
   sf::Text info_text;
   info_text.setPosition(this->player->GetCoords().first - 3500,
                         this->player->GetCoords().second - 1900);
@@ -194,19 +296,20 @@ void GameState::Render(sf::RenderTarget* target) {
   info_text.setFont(this->font);
   info_text.setCharacterSize(100);
   std::stringstream ss;
-  if (this->pig_amount <= 0) {
+  ss << "CURRENT SIMULATION SPEED: " << this->default_speed << "x" << '\n';
+  if (alive_pigs <= 0) {
     ss << "They are in a better place ..." << '\n';
   } else {
-    ss << "Pig count: " << this->pig_amount << '\n';
+    ss << "Pig count: " << alive_pigs << '\n';
+  }
+  if (alive_wolfs <= 0) {
+    ss << "They are in a better place ..." << '\n';
+  } else {
+    ss << "Wolf count: " << alive_wolfs << '\n';
   }
   ss << "Carrot count: " << this->carrot_vector.size() << '\n';
   info_text.setString(ss.str());
   target->draw(info_text);
-
-
-  for (size_t i = 0; i < this->pig_amount; ++i) {
-    this->pig_vector[i]->Render(this->window);
-  }
 
   if (this->pause) {
     this->pause_menu->Render(target, this->player->GetCoords().first, this->player->GetCoords().second);

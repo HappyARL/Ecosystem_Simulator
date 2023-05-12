@@ -28,7 +28,6 @@ class MapGenerator {
 
   std::vector<std::vector<int> > TileGenerator(size_t length, size_t width);
   std::vector<std::pair<int, int> > GetCarrot();
-  std::vector<std::vector<int> > MapToAdjList(std::vector<std::vector<int> > map);
 
   void Update(const float& dt);
   void Render(sf::RenderTarget* target, std::map<int, sf::Sprite> sprites);

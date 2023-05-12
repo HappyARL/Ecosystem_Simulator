@@ -140,6 +140,13 @@ build CMakeFiles/Game.dir/aStarAlgoritm.cpp.o: CXX_COMPILER__Game_Debug /Users/a
   OBJECT_DIR = CMakeFiles/Game.dir
   OBJECT_FILE_DIR = CMakeFiles/Game.dir
 
+build CMakeFiles/Game.dir/Wolf.cpp.o: CXX_COMPILER__Game_Debug /Users/arlan/CLionProjects/Game/Wolf.cpp || cmake_object_order_depends_target_Game
+  DEP_FILE = CMakeFiles/Game.dir/Wolf.cpp.o.d
+  FLAGS = -std=c++20 -g -arch x86_64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk -fcolor-diagnostics
+  INCLUDES = -F/Library/Frameworks
+  OBJECT_DIR = CMakeFiles/Game.dir
+  OBJECT_FILE_DIR = CMakeFiles/Game.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Game
@@ -148,7 +155,7 @@ build CMakeFiles/Game.dir/aStarAlgoritm.cpp.o: CXX_COMPILER__Game_Debug /Users/a
 #############################################
 # Link the executable Game
 
-build Game: CXX_EXECUTABLE_LINKER__Game_Debug CMakeFiles/Game.dir/main.cpp.o CMakeFiles/Game.dir/Game.cpp.o CMakeFiles/Game.dir/State.cpp.o CMakeFiles/Game.dir/GameState.cpp.o CMakeFiles/Game.dir/Entity.cpp.o CMakeFiles/Game.dir/MainMenuState.cpp.o CMakeFiles/Game.dir/Button.cpp.o CMakeFiles/Game.dir/Player.cpp.o CMakeFiles/Game.dir/MapGenerator.cpp.o CMakeFiles/Game.dir/PerlinNoise.cpp.o CMakeFiles/Game.dir/Pig.cpp.o CMakeFiles/Game.dir/PauseMenuState.cpp.o CMakeFiles/Game.dir/aStarAlgoritm.cpp.o
+build Game: CXX_EXECUTABLE_LINKER__Game_Debug CMakeFiles/Game.dir/main.cpp.o CMakeFiles/Game.dir/Game.cpp.o CMakeFiles/Game.dir/State.cpp.o CMakeFiles/Game.dir/GameState.cpp.o CMakeFiles/Game.dir/Entity.cpp.o CMakeFiles/Game.dir/MainMenuState.cpp.o CMakeFiles/Game.dir/Button.cpp.o CMakeFiles/Game.dir/Player.cpp.o CMakeFiles/Game.dir/MapGenerator.cpp.o CMakeFiles/Game.dir/PerlinNoise.cpp.o CMakeFiles/Game.dir/Pig.cpp.o CMakeFiles/Game.dir/PauseMenuState.cpp.o CMakeFiles/Game.dir/aStarAlgoritm.cpp.o CMakeFiles/Game.dir/Wolf.cpp.o
   FLAGS = -std=c++20 -g -arch x86_64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk
   LINK_LIBRARIES = -Wl,-rpath,/Library/Frameworks  -Xlinker -framework -Xlinker sfml-system  -Xlinker -framework -Xlinker sfml-window  -Xlinker -framework -Xlinker sfml-graphics  -Xlinker -framework -Xlinker sfml-network  -Xlinker -framework -Xlinker sfml-audio
   LINK_PATH = -F/Library/Frameworks
