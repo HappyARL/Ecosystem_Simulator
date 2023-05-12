@@ -3,6 +3,7 @@
 //
 
 #include "Pig.h"
+#include "Wolf.h"
 #include "aStarAlgoritm.h"
 #include <utility>
 #include <float.h>
@@ -19,7 +20,6 @@ void Pig::Init_Variables(float x, float y, bool adult, bool sex, std::vector<std
   this->sex_visor = 1500.f;
   this->is_male = sex;
   this->is_adult = adult;
-  this->have_plan = false;
   this->hunger = 100.0;
   this->health = 100.0;
   this->reproduce = 100.0;
@@ -57,7 +57,17 @@ Pig::~Pig() noexcept {
 // Condition of Pig
 
 bool Pig::InDanger() {
-  // search for wolf
+  const float x = this->sprite->getPosition().x / 100;
+  const float y = this->sprite->getPosition().y / 100;
+  for (auto& curr_wolf : this->wolf_vector_for_pig) {
+    float curr_distance = CountDistance(x, y,
+                                        curr_wolf->GetPosition().first / 100,
+                                        curr_wolf->GetPosition().second / 100);
+    if (this->view_side > curr_distance) {
+      this->src_fo_danger = curr_wolf;
+      return true;
+    }
+  }
   return false;
 }
 
@@ -111,7 +121,9 @@ void Pig::FindFood(const float x, const float y) {
         this->path = star.got_to_position((int)x, (int)y,
                                           closest_carrot->first,
                                           closest_carrot->second);
-        this->have_plan = true;
+        this->sprite->setPosition((float)this->path.back().first, (float)this->path.back().second);
+      } else {
+        this->FindFood(x, y);
       }
     }
   }
@@ -143,18 +155,38 @@ void Pig::FindPartner(const float x, const float y) {
         this->path = star.got_to_position((int) x, (int) y,
                                           (int)closest_partner->sprite->getPosition().x / 100,
                                           (int)closest_partner->sprite->getPosition().y / 100);
-        this->have_plan = true;
+        this->sprite->setPosition((float)this->path.back().first, (float)this->path.back().second);
+      } else {
+        this->FindPartner(x, y);
       }
     }
   }
 }
 
 void Pig::Run(const float x, const float y) {
-
+  int gen_x = GetRandomNumber(-8, 8);
+  int gen_y = GetRandomNumber(-8, 8);
+  while ((int)x + gen_x < 0 || (int)x + gen_x >= 50 ||
+         (int)y + gen_y < 0 || (int)y + gen_y >= 50 ||
+         (int)x + (int)src_fo_danger->GetPosition().first / 100 < 0 ||
+         (int)x + (int)src_fo_danger->GetPosition().first / 100 >= 50 ||
+         (int)y + (int)src_fo_danger->GetPosition().second < 0 ||
+         (int)y + (int)src_fo_danger->GetPosition().second >= 50 ||
+         this->map_for_pig[(int)x + gen_x][(int)y + gen_y] != 0) {
+    gen_x = GetRandomNumber(-8, 8);
+    gen_y = GetRandomNumber(-8, 8);
+  }
+  aStarAlgoritm star(this->map_for_pig);
+  this->path = star.got_to_position((int) x, (int) y,
+                                    (int)src_fo_danger->GetPosition().first / 100 + gen_x,
+                                    (int)src_fo_danger->GetPosition().second / 100 + gen_y);
+  if (!this->path.empty()) {
+    this->sprite->setPosition((float)this->path.back().first, (float)this->path.back().second);
+  }
 }
 
 void Pig::Dying() {
-  this->health -= 100;
+  this->health -= 100.f;
 }
 
 void Pig::Wandering(const float x, const float y) {
@@ -169,31 +201,12 @@ void Pig::Wandering(const float x, const float y) {
   aStarAlgoritm star(this->map_for_pig);
   this->path = star.got_to_position((int)x, (int)y,
                                     (int)x + gen_x, (int)y + gen_y);
-  this->have_plan = true;
+  if (!this->path.empty()) {
+    this->sprite->setPosition((float)this->path.back().first, (float)this->path.back().second);
+  }
 }
 
-void Pig::UpdateCarrotPositions(std::vector<std::pair<int, int>> carrot_vector) {
-  this->carrot_vector_for_pig = carrot_vector;
-}
-
-void Pig::UpdatePigPositions(std::vector<Pig *> pig_vector) {
-  this->pig_vector_for_pig = pig_vector;
-}
-
-std::vector<std::vector<int> > Pig::UpdateGlobalMap() {
-  return this->map_for_pig;
-}
-
-int Pig::GetBabyCount() {
-  return this->newborn;
-}
-
-std::pair<float, float> Pig::GetPosition() {
-  return std::make_pair(this->sprite->getPosition().x,
-                        this->sprite->getPosition().x);
-}
-
-void Pig::Update(const float& dt) {
+void Pig::Movement(const float& dt) {
   // Is pig alive
   if (isAlive()) {
     // Conditions that depend on time / timer
@@ -220,33 +233,68 @@ void Pig::Update(const float& dt) {
       this->KeyTime = 0.f;
     }
 
-    // Check does pig have route to smt
-    if (this->have_plan) {
-      if (!this->path.empty()) {
-        std::pair<int, int> where_to_go = this->path.back();
-        this->path.pop_back();
-        this->sprite->setPosition((float) where_to_go.first * 100,
-                                  (float) where_to_go.second * 100);
-      } else {
-        this->have_plan = false;
-      }
-    } else {
-      if (InDanger()) {
+    Priority priority = SAFE;
+
+    if (InDanger()) {
+      priority = UNDER_CHASE;
+    }
+    if (isHungry()) {
+      priority = STARVING;
+    }
+    if (isHorny()) {
+      priority = LONELY;
+    }
+
+    switch (priority) {
+      case UNDER_CHASE:
         this->Run(this->sprite->getPosition().x / 100,
                   this->sprite->getPosition().y / 100);
-      }
-      if (isHungry()) {
+        break;
+      case STARVING:
         this->FindFood(this->sprite->getPosition().x / 100,
                        this->sprite->getPosition().y / 100);
-      }
-      if (isHorny()) {
+        break;
+      case LONELY:
         this->FindPartner(this->sprite->getPosition().x / 100,
                           this->sprite->getPosition().y / 100);
-      }
-      this->Wandering(this->sprite->getPosition().x / 100,
-                      this->sprite->getPosition().y / 100);
+        break;
+      case SAFE:
+        this->Wandering(this->sprite->getPosition().x / 100,
+                        this->sprite->getPosition().y / 100);
+        break;
     }
   }
+}
+
+// Updates and Render
+
+void Pig::UpdateCarrotPositions(std::vector<std::pair<int, int>> carrot_vector) {
+  this->carrot_vector_for_pig = carrot_vector;
+}
+
+void Pig::UpdatePigPositions(std::vector<Pig *> pig_vector) {
+  this->pig_vector_for_pig = pig_vector;
+}
+
+void Pig::UpdateWolfPositions(std::vector<Wolf *> wolf_vector) {
+ this->wolf_vector_for_pig = wolf_vector;
+}
+
+std::vector<std::vector<int> > Pig::UpdateGlobalMap() {
+  return this->map_for_pig;
+}
+
+int Pig::GetBabyCount() {
+  return this->newborn;
+}
+
+std::pair<float, float> Pig::GetPosition() {
+  return std::make_pair(this->sprite->getPosition().x,
+                        this->sprite->getPosition().x);
+}
+
+void Pig::Update(const float& dt) {
+
 }
 
 void Pig::Render(sf::RenderTarget* target) {

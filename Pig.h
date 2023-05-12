@@ -7,11 +7,19 @@
 
 #include "Entity.h"
 
+class Wolf;
+
+enum Priority {
+  UNDER_CHASE = 1,
+  STARVING = 2,
+  LONELY = 3,
+  SAFE = 4
+};
+
 class Pig : public Entity {
  private:
   bool is_male;
   bool is_adult;
-  bool have_plan;
 
   float view_side;
   float sex_visor;
@@ -23,6 +31,8 @@ class Pig : public Entity {
 
   std::vector<std::pair<int, int> > carrot_vector_for_pig;
   std::vector<Pig *> pig_vector_for_pig;
+  std::vector<Wolf *> wolf_vector_for_pig;
+  Wolf* src_fo_danger = nullptr;
   std::vector<std::pair<int, int> > path;
 
   sf::Font font;
@@ -37,6 +47,7 @@ class Pig : public Entity {
 
  public:
   std::vector<std::vector<int> > map_for_pig;
+
   // Constructor for Pig
   Pig(float x, float y, sf::Texture* texture_alive, sf::Texture* texture_dead, bool adult, bool sex,
       std::vector<std::vector<int> > map);
@@ -57,12 +68,17 @@ class Pig : public Entity {
   void Dying();
   void Wandering(const float x, const float y);
 
-  // Updates and Render
+  void Movement(const float& dt);
+
+  // Updates Get-func. and Render
   void UpdateCarrotPositions(std::vector<std::pair<int, int> > carrot_vector);
   void UpdatePigPositions(std::vector<Pig *> pig_vector);
+  void UpdateWolfPositions(std::vector<Wolf *> wolf_vector);
+
   std::vector<std::vector<int> > UpdateGlobalMap();
   int GetBabyCount();
   std::pair<float, float> GetPosition();
+
   void Update(const float& dt);
   void Render(sf::RenderTarget* target);
 };

@@ -15,8 +15,8 @@ std::pair<float, float> GameState::GetRandomCoords(int min, int max) {
   int x = GetRandomNumber(min, max);
   int y = GetRandomNumber(min, max);
   while (map[x][y] == 1) {
-    x = GetRandomNumber(++min, --max);
-    y = GetRandomNumber(++min, --max);
+    x = GetRandomNumber(min, max);
+    y = GetRandomNumber(min, max);
   }
   std::cout << x << " " << y << '\n';
   std::pair<float, float> ans = std::make_pair(x * 100, y * 100);
@@ -85,19 +85,19 @@ void GameState::Init_Players() {
 }
 
 void GameState::Init_Animals() {
+  for (size_t i = 0; i < this->wolf_amount; ++i) {
+    std::pair<float, float> map_pos = GetRandomCoords(1, 49);
+    int sex_num = GetRandomNumber(0, 1);
+    bool sex = sex_num == 1; // true = male and false = female
+    this->wolf_vector.push_back(new Wolf(map_pos.first, map_pos.second, &this->textures["WOLF_ALIVE"],
+                                         &this->textures["WOLF_DEAD"], true, sex, this->map));
+  }
   for (size_t i = 0; i < this->pig_amount; ++i) {
     std::pair<float, float> map_pos = GetRandomCoords(1, 49);
     int sex_num = GetRandomNumber(0, 1);
     bool sex = sex_num == 1; // true = male and false = female
     this->pig_vector.push_back(new Pig(map_pos.first, map_pos.second, &this->textures["PIG_ALIVE"],
                                        &this->textures["PIG_DEAD"], true, sex, this->map));
-  }
-  for (size_t i = 0; i < this->wolf_amount; ++i) {
-    std::pair<float, float> map_pos = GetRandomCoords(1, 49);
-    int sex_num = GetRandomNumber(0, 1);
-    bool sex = sex_num == 1; // true = male and false = female
-    this->wolf_vector.push_back(new Wolf(map_pos.first, map_pos.second, &this->textures["WOLF_ALIVE"],
-                                       &this->textures["WOLF_DEAD"], true, sex, this->map));
   }
 }
 
@@ -203,14 +203,19 @@ void GameState::Update(const float& dt) {
       this->carrot_vector = map_gen->GetCarrot();
       size_t curr_amount = 0;
 
+      // Update wolves
+      for (size_t i = 0; i < this->wolf_amount; ++i) {
+        this->wolf_vector[i]->UpdatePigPositions(this->pig_vector);
+        this->wolf_vector[i]->Update(dt);
+      }
+
       // Update pigs
       for (size_t i = 0; i < this->pig_amount; ++i) {
         this->pig_vector[i]->UpdateCarrotPositions(this->carrot_vector);
         this->pig_vector[i]->UpdatePigPositions(this->pig_vector);
+        this->pig_vector[i]->UpdateWolfPositions(this->wolf_vector);
+        this->pig_vector[i]->Movement(dt);
         this->pig_vector[i]->Update(dt);
-        if (this->pig_vector[i]->isAlive()) {
-          ++curr_amount;
-        }
         this->map = this->pig_vector[i]->UpdateGlobalMap();
         this->baby_born += this->pig_vector[i]->GetBabyCount();
         // Birth of pig
@@ -228,32 +233,6 @@ void GameState::Update(const float& dt) {
           }
         }
       }
-
-      // Update wolves
-      for (size_t i = 0; i < this->wolf_amount; ++i) {
-        this->wolf_vector[i]->UpdateWolfPositions(this->wolf_vector);
-        this->wolf_vector[i]->UpdatePigPositions(this->pig_vector);
-        this->wolf_vector[i]->Update(dt);
-        if (this->wolf_vector[i]->isAlive()) {
-          ++curr_amount;
-        }
-        this->baby_born += this->wolf_vector[i]->GetBabyCount();
-        // Birth of wolf
-        if (this->baby_born != 0) {
-          while (this->baby_born != 0) {
-            int sex_num = GetRandomNumber(0, 1);
-            bool sex = sex_num == 1; // true = male and false = female
-            this->wolf_vector.push_back(new Wolf(this->wolf_vector[i]->GetPosition().first,
-                                               this->wolf_vector[i]->GetPosition().second,
-                                               &this->textures["WOLF_ALIVE"],
-                                               &this->textures["WOLF_DEAD"],
-                                               true, sex, this->map));
-            ++curr_amount;
-            --this->baby_born;
-          }
-        }
-      }
-      //this->wolf_amount = curr_amount;
     } else {
       this->pause_menu->Update(this->mouse_pos_view);
     }

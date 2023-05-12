@@ -1,6 +1,6 @@
 //
 //  Game.cpp
-//  HappyFarm
+//  Eco-system simulator
 //
 //  Created by Арлан on 21.04.2023.
 //  Copyright © 2023 Арлан. All rights reserved.

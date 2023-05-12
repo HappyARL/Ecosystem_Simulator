@@ -3,6 +3,7 @@
 //
 
 #include "Wolf.h"
+#include "Pig.h"
 #include "aStarAlgoritm.h"
 #include <utility>
 #include <float.h>
@@ -15,14 +16,10 @@ void Wolf::Init_Fonts() {
 
 void Wolf::Init_Variables(float x, float y, bool adult, bool sex, std::vector<std::vector<int> > map,
                          sf::Texture* texture_dead) {
-  this->view_side = 1000.0;
-  this->sex_visor = 1500.f;
-  this->is_male = sex;
-  this->is_adult = adult;
+  this->view_side = 3000.0;
   this->have_plan = false;
   this->hunger = 100.0;
   this->health = 100.0;
-  this->reproduce = 100.0;
   this->map_for_Wolf = std::move(map);
   this->texture_dead = texture_dead;
   this->sprite_dead = new sf::Sprite(*this->texture_dead);
@@ -56,24 +53,12 @@ Wolf::~Wolf() {
 
 // Condition of Wolf
 
-bool Wolf::isMale() {
-  return this->is_male;
-}
-
-bool Wolf::isAdult() {
-  return this->is_adult;
-}
-
 bool Wolf::isAlive() {
   return (this->health > 0);
 }
 
 bool Wolf::isHungry() {
   return (this->hunger < 60.0);
-}
-
-bool Wolf::isHorny() {
-  return (this->reproduce < 50.0);
 }
 
 int GetRandomNumberWolf(int min, int max) {
@@ -88,12 +73,14 @@ void Wolf::FindFood(const float x, const float y) {
   float shortest_distance = FLT_MAX;
   Pig* closest_pig = nullptr;
   for (auto& curr_pig : this->pig_vector_for_Wolf) {
-    float curr_distance = CountDistance(x, y,
-                                        curr_pig->GetPosition().first,
-                                        curr_pig->GetPosition().second);
-    if (shortest_distance > curr_distance) {
-      shortest_distance = curr_distance;
-      closest_pig = curr_pig;
+    if (curr_pig->isAlive()) {
+      float curr_distance = CountDistance(x, y,
+                                          curr_pig->GetPosition().first / 100,
+                                          curr_pig->GetPosition().second / 100);
+      if (shortest_distance > curr_distance) {
+        shortest_distance = curr_distance;
+        closest_pig = curr_pig;
+      }
     }
   }
   if (shortest_distance <= this->view_side) {
@@ -103,42 +90,10 @@ void Wolf::FindFood(const float x, const float y) {
       closest_pig->Dying();
     } else {
       if (closest_pig) {
-        this->path = star.got_to_position((int)x, (int)y,
-                                          (int)closest_pig->GetPosition().first,
-                                          (int)closest_pig->GetPosition().second);
-        this->have_plan = true;
-      }
-    }
-  }
-}
-
-void Wolf::FindPartner(const float x, const float y) {
-  float shortest_distance = FLT_MAX;
-  Wolf* closest_partner = nullptr;
-  for (auto& curr_Wolf : this->wolf_vector_for_Wolf) {
-    if (curr_Wolf->isAlive() &&
-        this->isMale() != curr_Wolf->isMale() && curr_Wolf->isAdult()) {
-      float curr_distance = CountDistance(x, y,
-                                          curr_Wolf->sprite->getPosition().x / 100,
-                                          curr_Wolf->sprite->getPosition().y) / 100;
-      if (shortest_distance > curr_distance) {
-        shortest_distance = curr_distance;
-        closest_partner = curr_Wolf;
-      }
-    }
-  }
-  if (shortest_distance <= this->sex_visor) {
-    aStarAlgoritm star(this->map_for_Wolf);
-    if (this->GetPosition() == closest_partner->GetPosition()) {
-      float curr_reproduce = this->reproduce;
-      this->reproduce += 100.f - curr_reproduce;
-      this->newborn += GetRandomNumberWolf(1, 3);
-    } else {
-      if (closest_partner) {
-        this->path = star.got_to_position((int) x, (int) y,
-                                          (int)closest_partner->sprite->getPosition().x / 100,
-                                          (int)closest_partner->sprite->getPosition().y / 100);
-        this->have_plan = true;
+         this->path_walking = star.got_to_position((int)x, (int)y,
+                                          (int)closest_pig->GetPosition().first / 100,
+                                          (int)closest_pig->GetPosition().second / 100);
+         this->have_plan = true;
       }
     }
   }
@@ -154,21 +109,17 @@ void Wolf::Wandering(const float x, const float y) {
     gen_y = GetRandomNumberWolf(-5, 5);
   }
   aStarAlgoritm star(this->map_for_Wolf);
-  this->path = star.got_to_position((int)x, (int)y,
+  this->path_walking = star.got_to_position((int)x, (int)y,
                                     (int)x + gen_x, (int)y + gen_y);
   this->have_plan = true;
 }
 
-void Wolf::UpdatePigPositions(std::vector<Pig *> pig_vector) {
-  this->pig_vector_for_Wolf = pig_vector;
-}
 
-void Wolf::UpdateWolfPositions(std::vector<Wolf *> Wolf_vector) {
-  this->wolf_vector_for_Wolf = Wolf_vector;
-}
-
-int Wolf::GetBabyCount() {
-  return this->newborn;
+void Wolf::UpdatePigPositions(const std::vector<Pig*>& pig_vector) {
+  pig_vector_for_Wolf.clear(); // clear the vector to start fresh
+  for (size_t i = 0; i < pig_vector.size(); ++i) {
+    pig_vector_for_Wolf.push_back(pig_vector[i]);
+  }
 }
 
 std::pair<float, float> Wolf::GetPosition() {
@@ -190,24 +141,14 @@ void Wolf::Update(const float& dt) {
         this->health -= 20.f;
       }
 
-      // Check reproduce urge bar
-      if (this->isAdult()) {
-        if (this->reproduce > 0) {
-          this->reproduce -= 0.f;
-        } else {
-          this->health -= 10.f;
-        }
-      }
-
       // restart timer
       this->KeyTime = 0.f;
     }
 
-    // Check does Wolf have route to smt
     if (this->have_plan) {
-      if (!this->path.empty()) {
-        std::pair<int, int> where_to_go = this->path.back();
-        this->path.pop_back();
+      if (!this->path_walking.empty()) {
+        std::pair<int, int> where_to_go = this->path_walking.back();
+        this->path_walking.pop_back();
         this->sprite->setPosition((float) where_to_go.first * 100,
                                   (float) where_to_go.second * 100);
       } else {
@@ -217,10 +158,6 @@ void Wolf::Update(const float& dt) {
       if (isHungry()) {
         this->FindFood(this->sprite->getPosition().x / 100,
                        this->sprite->getPosition().y / 100);
-      }
-      if (isHorny()) {
-        this->FindPartner(this->sprite->getPosition().x / 100,
-                          this->sprite->getPosition().y / 100);
       }
       this->Wandering(this->sprite->getPosition().x / 100,
                       this->sprite->getPosition().y / 100);
@@ -236,11 +173,9 @@ void Wolf::Render(sf::RenderTarget* target) {
     info_text.setFont(this->font);
     info_text.setCharacterSize(20);
     std::stringstream ss;
-    ss << "sex: " << (this->is_male ? "Male" : "Female") << '\n';
     ss << "health: " << this->health << '\n';
     ss << "hunger: " << this->hunger << '\n';
-    ss << "reproduce urge: " << this->reproduce << '\n';
-    ss << "age: " << (this->isAdult() ? "MATURE" : "BABY") << '\n';
+    ss << "is hunting: " << (this->isHungry() ? "YES" : "NO") << '\n';
     if (!this->isAlive()) {
       ss << "~DEAD~" << '\n';
     }

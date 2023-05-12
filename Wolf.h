@@ -5,29 +5,24 @@
 #ifndef GAME_WOLF_H
 #define GAME_WOLF_H
 
-#include "Pig.h"
+#include "Entity.h"
+
+class Pig;
 
 class Wolf : public Entity {
  private:
-  bool is_male;
-  bool is_adult;
   bool have_plan;
 
   float view_side;
-  float sex_visor;
   float hunger;
   float health;
-  float reproduce;
   float KeyTime;
   float KeyTimeMax;
 
-  std::vector<Wolf *> wolf_vector_for_Wolf;
   std::vector<Pig *> pig_vector_for_Wolf;
-  std::vector<std::pair<int, int> > path;
+  std::vector<std::pair<int, int> > path_walking;
 
   sf::Font font;
-
-  int newborn = 0;
 
   void Init_Fonts();
   void Init_Variables(float x, float y, bool adult, bool sex, std::vector<std::vector<int> > map,
@@ -43,21 +38,15 @@ class Wolf : public Entity {
   ~Wolf();
 
   // Condition of Wolf
-  bool isMale();
-  bool isAdult();
   bool isAlive();
   bool isHungry();
-  bool isHorny();
 
   // Behaviour of Wolf
   void FindFood(const float x, const float y);
-  void FindPartner(const float x, const float y);
   void Wandering(const float x, const float y);
 
   // Updates and Render
-  void UpdatePigPositions(std::vector<Pig *> pig_vector);
-  void UpdateWolfPositions(std::vector<Wolf *> Wolf_vector);
-  int GetBabyCount();
+  void UpdatePigPositions(const std::vector<Pig*>& pig_vector);
   std::pair<float, float> GetPosition();
   void Update(const float& dt);
   void Render(sf::RenderTarget* target);
